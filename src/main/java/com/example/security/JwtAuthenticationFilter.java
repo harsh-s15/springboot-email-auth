@@ -15,21 +15,30 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        return path.equals("/login")
+                || path.equals("/signup")
+                || path.equals("/logout")
+                || path.equals("/home");
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws IOException, jakarta.servlet.ServletException {
 
+
         String token = null;
 
-        // 1️⃣ Authorization header
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
         }
 
-        // 2️⃣ Cookie fallback
         if (token == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("access_token".equals(cookie.getName())) {
@@ -38,9 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 🔑 CRITICAL PART
-        // If NO token → skip auth, continue chain
-        if (token == null) {
+        if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -65,3 +72,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+

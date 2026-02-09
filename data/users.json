@@ -5,7 +5,7 @@
     "username" : "harsh"
   },
   "harsh-jwt" : {
-    "fruits" : [ "kiwi" ],
+    "fruits" : [ "kiwi", "banana" ],
     "passwordHash" : "$2a$10$qbulk9kLE887SOakX/ivJ.1OPabzGl0X3urOFYSNGIBXN3q0nIuN6",
     "username" : "harsh-jwt"
   }

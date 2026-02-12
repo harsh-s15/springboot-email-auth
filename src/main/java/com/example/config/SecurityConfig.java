@@ -38,8 +38,16 @@ public class SecurityConfig {
                                 res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/signup", "/logout", "/login", "/refresh").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/home").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/signup",
+                                "/logout",
+                                "/login",
+                                "/refresh"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/home",
+                                "/test-email"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

@@ -1,7 +1,7 @@
-package com.example.service;
+package com.example.auth.service;
 
-import com.example.DAO.UserRepository;
-import com.example.bean.User;
+import com.example.auth.DAO.UserRepository;
+import com.example.auth.bean.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 

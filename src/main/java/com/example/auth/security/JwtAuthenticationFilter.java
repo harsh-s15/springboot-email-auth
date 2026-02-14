@@ -1,4 +1,4 @@
-package com.example.security;
+package com.example.auth.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
@@ -23,8 +23,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/logout")
                 || path.equals("/home")
                 || path.equals("/refresh")
-                || path.equals("/test-email");
-
+                || path.equals("/test-email")
+                || path.equals("/verify")
+                || path.equals("/reset-password")
+                || path.equals("/forgot-password");
     }
 
     @Override

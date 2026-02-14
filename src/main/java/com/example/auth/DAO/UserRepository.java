@@ -1,6 +1,6 @@
-package com.example.DAO;
+package com.example.auth.DAO;
 
-import com.example.bean.User;
+import com.example.auth.bean.User;
 
 import java.util.Optional;
 

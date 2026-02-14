@@ -1,6 +1,6 @@
-package com.example.DAO;
+package com.example.auth.DAO;
 
-import com.example.bean.RefreshToken;
+import com.example.auth.bean.RefreshToken;
 import java.util.Optional;
 
 public interface RefreshTokenRepository {
@@ -10,4 +10,6 @@ public interface RefreshTokenRepository {
     Optional<RefreshToken> findByToken(String token);
 
     void delete(String token);
+
+    void deleteAllForUser(String username);
 }

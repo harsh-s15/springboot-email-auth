@@ -1,12 +1,8 @@
 {
-  "harsh" : {
-    "fruits" : [ "\"apple\"", "\"banana\"", "mango" ],
-    "passwordHash" : "$2a$10$SolWTjTCbbVNd.7E3qiM3eZ5gemTbTZ8KhxyrK1PRb.USFU5A71xa",
-    "username" : "harsh"
-  },
-  "harsh-jwt" : {
-    "fruits" : [ "kiwi", "banana" ],
-    "passwordHash" : "$2a$10$qbulk9kLE887SOakX/ivJ.1OPabzGl0X3urOFYSNGIBXN3q0nIuN6",
-    "username" : "harsh-jwt"
+  "harshvsingh15@gmail.com" : {
+    "emailVerified" : true,
+    "fruits" : [ "strawberry" ],
+    "passwordHash" : "$2a$10$dFBYXFyY1OF9Qe4J.kHCwuYEMJYMzaMNg1afPEUFZ13kNrzJXKUw2",
+    "username" : "harshvsingh15@gmail.com"
   }
 }

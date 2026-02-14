@@ -1,4 +1,4 @@
-package com.example.bean;
+package com.example.auth.bean;
 
 import java.util.ArrayList;
 
@@ -6,8 +6,9 @@ import java.util.List;
 
 public class User {
     private String username;
-
     private String passwordHash;
+    private boolean emailVerified = false;
+
 
     private List<String> fruits = new ArrayList<>();
 
@@ -33,6 +34,14 @@ public class User {
 
     public void setFruits(List<String> fruits) {
         this.fruits = fruits;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
     }
 
 

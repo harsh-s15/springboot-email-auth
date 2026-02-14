@@ -1,33 +1,30 @@
-package com.example.controller;
+package com.example.auth.controller;
 
-import com.example.DAO.UserRepository;
-import com.example.bean.User;
-import com.example.dto.LoginRequest;
-import com.example.dto.SignupRequest;
-import com.example.security.JwtUtil;
+import com.example.auth.DAO.FilePasswordResetRepository;
+import com.example.auth.DAO.FileVerificationTokenRepository;
+import com.example.auth.DAO.UserRepository;
+import com.example.auth.DAO.RefreshTokenRepository;
+import com.example.auth.bean.PasswordResetToken;
+import com.example.auth.bean.VerificationToken;
+import com.example.auth.bean.User;
+import com.example.auth.dto.ForgotPasswordRequest;
+import com.example.auth.dto.LoginRequest;
+import com.example.auth.dto.ResetPasswordRequest;
+import com.example.auth.dto.SignupRequest;
+import com.example.auth.security.JwtUtil;
+import com.example.auth.security.TokenUtil;
+import com.example.auth.service.EmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseCookie;
 
-import com.example.DAO.RefreshTokenRepository;
-import com.example.bean.RefreshToken;
-import com.example.security.RefreshTokenUtil;
+import com.example.auth.bean.RefreshToken;
+import com.example.auth.security.RefreshTokenUtil;
 
 import jakarta.servlet.http.Cookie;
-
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 public class AuthController {
@@ -35,6 +32,9 @@ public class AuthController {
     private final UserRepository repo;
     private final PasswordEncoder encoder;
     private final RefreshTokenRepository refreshRepo;
+    private final EmailService emailService;
+    private final FileVerificationTokenRepository verifyTokenRepo;
+    private final FilePasswordResetRepository resetPwRepo;
     private static final long ACCESS_EXPIRY_SECONDS = 15 * 60;       // 15 min
     private static final long REFRESH_EXPIRY_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
@@ -43,11 +43,17 @@ public class AuthController {
     public AuthController(
             UserRepository repo,
             PasswordEncoder encoder,
-            RefreshTokenRepository refreshRepo
+            RefreshTokenRepository refreshRepo,
+            EmailService emailService,
+            FileVerificationTokenRepository verifyTokenRepo,
+            FilePasswordResetRepository resetPwRepo
     ) {
         this.repo = repo;
         this.encoder = encoder;
         this.refreshRepo = refreshRepo;
+        this.emailService = emailService;
+        this.verifyTokenRepo = verifyTokenRepo;
+        this.resetPwRepo = resetPwRepo;
     }
 
     @GetMapping("/home")
@@ -62,17 +68,60 @@ public class AuthController {
             return ResponseEntity.badRequest().body("User exists");
         }
 
-//        System.out.println("req.username()");
-
         User user = new User();
         user.setUsername(req.username());
         user.setPasswordHash(encoder.encode(req.password()));
-
-//        System.out.println(user.toString());
+        user.setEmailVerified(false);
 
         repo.save(user);
-        return ResponseEntity.ok("Signup successful");
+
+        // Generate verification token
+        String token = TokenUtil.generateToken();
+        long expiry = System.currentTimeMillis() + (10 * 60 * 1000); // 10 min
+
+        VerificationToken vt =
+                new VerificationToken(token, user.getUsername(), expiry);
+
+        verifyTokenRepo.save(vt);
+
+        // Send email
+        String link = "http://localhost:8080/verify?token=" + token;
+        emailService.sendSimpleMail(
+                user.getUsername(),
+                "Verify your email",
+                "Click to verify: " + link
+        );
+
+        return ResponseEntity.ok("Signup successful. Check email.");
     }
+
+
+
+
+
+    @GetMapping("/verify")
+    public ResponseEntity<?> verify(@RequestParam String token) {
+
+        VerificationToken vt = verifyTokenRepo.find(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (vt.getExpiryEpoch() < System.currentTimeMillis()) {
+            verifyTokenRepo.delete(token);
+            return ResponseEntity.badRequest().body("Token expired");
+        }
+
+        User user = repo.findByUsername(vt.getUsername())
+                .orElseThrow();
+
+        user.setEmailVerified(true);
+        repo.save(user);
+
+        verifyTokenRepo.delete(token);
+
+        return ResponseEntity.ok("Email verified. You can login now.");
+    }
+
+
 
 
 
@@ -84,6 +133,11 @@ public class AuthController {
 
         User user = repo.findByUsername(req.username())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        if (!user.isEmailVerified()) {
+            return ResponseEntity.status(403)
+                    .body("Please verify your email first");
+        }
 
         if (!encoder.matches(req.password(), user.getPasswordHash())) {
             return ResponseEntity.status(401).body("Invalid credentials");
@@ -252,6 +306,67 @@ public class AuthController {
 
         return ResponseEntity.ok("Logged out");
     }
+
+
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest req) {
+
+        var userOpt = repo.findByUsername(req.email());
+
+        // Do NOT reveal whether user exists (security)
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.ok("If account exists, email sent");
+        }
+
+        String token = TokenUtil.generateToken();
+        long expiry = System.currentTimeMillis() + (15 * 60 * 1000); // 15 min
+
+        PasswordResetToken prt =
+                new PasswordResetToken(token, req.email(), expiry);
+
+        resetPwRepo.save(prt);
+
+        String link = "http://localhost:8080/reset-password?token=" + token;
+
+        emailService.sendSimpleMail(
+                req.email(),
+                "Password Reset",
+                "Click to reset password: " + link
+        );
+
+        return ResponseEntity.ok("If account exists, email sent");
+    }
+
+
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest req) {
+
+        PasswordResetToken prt = resetPwRepo.find(req.token())
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (prt.getExpiryEpoch() < System.currentTimeMillis()) {
+            resetPwRepo.delete(req.token());
+            return ResponseEntity.badRequest().body("Token expired");
+        }
+
+        User user = repo.findByUsername(prt.getUsername())
+                .orElseThrow();
+
+        user.setPasswordHash(encoder.encode(req.newPassword()));
+        repo.save(user);
+
+        resetPwRepo.delete(req.token());
+
+        // 3️⃣ SECURITY: invalidate all sessions
+        refreshRepo.deleteAllForUser(user.getUsername());
+
+        return ResponseEntity.ok("Password reset successful");
+    }
+
+
 
 
 

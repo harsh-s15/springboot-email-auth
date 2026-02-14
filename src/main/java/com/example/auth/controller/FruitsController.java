@@ -1,7 +1,7 @@
-package com.example.controller;
+package com.example.auth.controller;
 
-import com.example.DAO.UserRepository;
-import com.example.bean.User;
+import com.example.auth.DAO.UserRepository;
+import com.example.auth.bean.User;
 //import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.security.core.Authentication;
 
@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/fruits")

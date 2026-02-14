@@ -1,6 +1,6 @@
-package com.example.DAO;
+package com.example.auth.DAO;
 
-import com.example.bean.User;
+import com.example.auth.bean.User;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;

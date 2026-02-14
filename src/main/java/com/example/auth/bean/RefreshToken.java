@@ -1,4 +1,4 @@
-package com.example.bean;
+package com.example.auth.bean;
 
 public class RefreshToken {
 

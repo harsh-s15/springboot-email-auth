@@ -1,7 +1,7 @@
-package com.example.config;
+package com.example.auth.config;
 
 
-import com.example.security.JwtAuthenticationFilter;
+import com.example.auth.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,11 +42,14 @@ public class SecurityConfig {
                                 "/signup",
                                 "/logout",
                                 "/login",
-                                "/refresh"
+                                "/refresh",
+                                "/forgot-password",
+                                "/reset-password"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/home",
-                                "/test-email"
+                                "/test-email",
+                                "/verify"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

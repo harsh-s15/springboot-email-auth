@@ -1,6 +1,6 @@
-package com.example.DAO;
+package com.example.auth.DAO;
 
-import com.example.bean.RefreshToken;
+import com.example.auth.bean.PasswordResetToken;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Repository;
@@ -14,26 +14,27 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public class FileRefreshTokenRepository implements RefreshTokenRepository {
+public class FilePasswordResetRepository {
 
-    private final Path file = Paths.get("data/refresh_tokens.json");
+    private final Path file = Paths.get("data/password_reset_tokens.json");
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private Map<String, RefreshToken> load() {
+    private Map<String, PasswordResetToken> load() {
         try {
-            if (!Files.exists(file)) return new HashMap<>();
-            if (Files.size(file) == 0) return new HashMap<>();
+            if (!Files.exists(file) || Files.size(file) == 0) {
+                return new HashMap<>();
+            }
 
             return mapper.readValue(
                     Files.readString(file),
-                    new TypeReference<Map<String, RefreshToken>>() {}
+                    new TypeReference<Map<String, PasswordResetToken>>() {}
             );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void persist(Map<String, RefreshToken> tokens) {
+    private void persist(Map<String, PasswordResetToken> tokens) {
         try {
             Files.createDirectories(file.getParent());
             mapper.writerWithDefaultPrettyPrinter()
@@ -43,21 +44,18 @@ public class FileRefreshTokenRepository implements RefreshTokenRepository {
         }
     }
 
-    @Override
-    public void save(RefreshToken token) {
-        Map<String, RefreshToken> tokens = load();
+    public void save(PasswordResetToken token) {
+        Map<String, PasswordResetToken> tokens = load();
         tokens.put(token.getToken(), token);
         persist(tokens);
     }
 
-    @Override
-    public Optional<RefreshToken> findByToken(String token) {
+    public Optional<PasswordResetToken> find(String token) {
         return Optional.ofNullable(load().get(token));
     }
 
-    @Override
     public void delete(String token) {
-        Map<String, RefreshToken> tokens = load();
+        Map<String, PasswordResetToken> tokens = load();
         tokens.remove(token);
         persist(tokens);
     }

@@ -1,4 +1,4 @@
-package com.example.controller;
+package com.example.auth.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

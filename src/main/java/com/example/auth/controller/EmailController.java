@@ -1,6 +1,6 @@
-package com.example.controller;
+package com.example.auth.controller;
 
-import com.example.service.EmailService;
+import com.example.auth.service.EmailService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
